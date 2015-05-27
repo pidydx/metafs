@@ -47,15 +47,23 @@ class Filer(object):
         # cases where a case sensitive file system has been mounted.
         if sys.platform in ["win32", "darwin"]:
             root = root.lower()
-        self._add_dir_entry(root.decode('utf-8'))
-        for (dirpath, dirnames, filenames) in os.walk(root):
-            if sys.platform in ["win32", "darwin"]:
-                dirpath = dirpath.lower()
-            self._add_dir_entry(dirpath.decode('utf-8'))
-            for filename in filenames:
+
+        if os.path.isdir(root):
+            root = os.path.dirname(root)
+            self._add_dir_entry(root.decode('utf-8'))
+            for (dirpath, dirnames, filenames) in os.walk(root):
                 if sys.platform in ["win32", "darwin"]:
-                    filename = filename.lower()
-                self._add_file_entry(dirpath.decode('utf-8'), filename.decode('utf-8'))
+                    dirpath = dirpath.lower()
+                self._add_dir_entry(dirpath.decode('utf-8'))
+                for filename in filenames:
+                    if sys.platform in ["win32", "darwin"]:
+                        filename = filename.lower()
+                    self._add_file_entry(dirpath.decode('utf-8'), filename.decode('utf-8'))
+        elif os.path.isfile(root):
+            filename = os.path.basename(root)
+            dirpath = os.path.dirname(root)
+            self._add_file_entry(dirpath.decode('utf-8'), filename.decode('utf-8'))
+
 
     def _add_dir_entry(self, path):
         # Directories are stored by the hash of their path rather than contents
